@@ -1,11 +1,13 @@
 // History Files Menu Extension
 
-const St = imports.gi.St;
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const Main = imports.ui.main;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import St from 'gi://St';
+import Main from 'resource:///org/gnome/shell/ui/main.js';
+import PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as ExtensionUtils from 'resource:///org/gnome/shell/misc/extensionUtils.js';
+
 
 // Path to history files directory
 const HISTORIES_DIR = GLib.build_filenamev([GLib.get_home_dir(), '.histories']);
@@ -118,26 +120,32 @@ class HistoryButton extends PanelMenu.Button {
     }
 }
 
-// Extension variables
-let button;
-
-// Initialize the extension
-function init() {
-    log('Initializing History Files Menu extension');
-}
-
-// Enable the extension
-function enable() {
-    log('Enabling History Files Menu extension');
-    button = new HistoryButton();
-    Main.panel.addToStatusArea('history-files-menu', button);
-}
-
-// Disable the extension
-function disable() {
-    log('Disabling History Files Menu extension');
-    if (button) {
-        button.destroy();
-        button = null;
+/**
+ * Extension class
+ */
+class Extension {
+    constructor() {
+        this._button = null;
     }
+
+    enable() {
+        console.log('Enabling History Files Menu extension');
+        this._button = new HistoryButton();
+        Main.panel.addToStatusArea('history-files-menu', this._button);
+    }
+
+    disable() {
+        console.log('Disabling History Files Menu extension');
+        if (this._button) {
+            this._button.destroy();
+            this._button = null;
+        }
+    }
+}
+
+/**
+ * @returns {Extension} - New extension instance
+ */
+export default function() {
+    return new Extension();
 }
