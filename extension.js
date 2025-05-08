@@ -1,165 +1,143 @@
-/* extension.js
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// History Files Menu Extension
 
-'use strict';
-
-const { GObject, St, Gio, GLib } = imports.gi;
+const St = imports.gi.St;
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
 
+// Path to history files directory
 const HISTORIES_DIR = GLib.build_filenamev([GLib.get_home_dir(), '.histories']);
+// Script to execute when a history file is selected
 const GT_SCRIPT = 'gt.sh';
 
-var HistoryFilesIndicator = GObject.registerClass(
-    class HistoryFilesIndicator extends PanelMenu.Button {
-        _init() {
-            super._init(0.0, 'History Files Indicator');
-            
-            // Create the panel button with an icon
-            let icon = new St.Icon({
-                icon_name: 'document-open-recent-symbolic',
-                style_class: 'system-status-icon',
-            });
-            
-            this.add_child(icon);
-            
-            // Refresh the menu when opened
-            this.menu.connect('open-state-changed', (menu, open) => {
-                if (open) {
-                    this._refreshMenu();
-                }
-            });
-            
-            // Initial menu population
-            this._refreshMenu();
-        }
+// Create a simple button with a popup menu
+class HistoryButton extends PanelMenu.Button {
+    constructor() {
+        super(0.0, 'History Files Menu');
         
-        _refreshMenu() {
-            // Clear the current menu
-            this.menu.removeAll();
-            
-            // Get all history files
-            let historyFiles = this._getHistoryFiles();
-            
-            if (historyFiles.length === 0) {
-                let emptyItem = new PopupMenu.PopupMenuItem('No history files found');
-                emptyItem.setSensitive(false);
-                this.menu.addMenuItem(emptyItem);
-                return;
-            }
-            
-            // Add each history file to the menu
-            historyFiles.forEach(file => {
-                let item = new PopupMenu.PopupMenuItem(file);
-                item.connect('activate', () => {
-                    this._openHistoryFile(file);
-                });
-                this.menu.addMenuItem(item);
-            });
-            
-            // Add a separator
-            this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-            
-            // Add a refresh button
-            let refreshItem = new PopupMenu.PopupMenuItem('Refresh');
-            refreshItem.connect('activate', () => {
+        // Add an icon to the panel
+        let icon = new St.Icon({
+            icon_name: 'document-open-recent-symbolic',
+            style_class: 'system-status-icon',
+        });
+        this.add_child(icon);
+        
+        // Refresh menu when opened
+        this.menu.connect('open-state-changed', (menu, open) => {
+            if (open) {
                 this._refreshMenu();
+            }
+        });
+        
+        // Initial menu setup
+        this._refreshMenu();
+    }
+        
+    _refreshMenu() {
+        // Clear the current menu
+        this.menu.removeAll();
+        
+        // Get all history files
+        let historyFiles = this._getHistoryFiles();
+        
+        if (historyFiles.length === 0) {
+            let emptyItem = new PopupMenu.PopupMenuItem('No history files found');
+            emptyItem.setSensitive(false);
+            this.menu.addMenuItem(emptyItem);
+            return;
+        }
+        
+        // Add each history file to the menu
+        historyFiles.forEach(file => {
+            let item = new PopupMenu.PopupMenuItem(file);
+            item.connect('activate', () => {
+                this._openHistoryFile(file);
             });
-            this.menu.addMenuItem(refreshItem);
-        }
+            this.menu.addMenuItem(item);
+        });
         
-        _getHistoryFiles() {
-            let files = [];
-            
-            try {
-                // Check if the histories directory exists
-                let dir = Gio.File.new_for_path(HISTORIES_DIR);
-                if (!dir.query_exists(null)) {
-                    return files;
-                }
-                
-                // List all files in the directory
-                let enumerator = dir.enumerate_children('standard::name', Gio.FileQueryInfoFlags.NONE, null);
-                let info;
-                
-                while ((info = enumerator.next_file(null))) {
-                    files.push(info.get_name());
-                }
-                
-                // Sort files alphabetically
-                files.sort();
-            } catch (e) {
-                logError(e, 'Error reading history files');
+        // Add a separator
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        
+        // Add a refresh button
+        let refreshItem = new PopupMenu.PopupMenuItem('Refresh');
+        refreshItem.connect('activate', () => {
+            this._refreshMenu();
+        });
+        this.menu.addMenuItem(refreshItem);
+    }
+        
+    _getHistoryFiles() {
+        let files = [];
+        
+        try {
+            // Check if the histories directory exists
+            let dir = Gio.File.new_for_path(HISTORIES_DIR);
+            if (!dir.query_exists(null)) {
+                return files;
             }
             
-            return files;
+            // List all files in the directory
+            let enumerator = dir.enumerate_children('standard::name', Gio.FileQueryInfoFlags.NONE, null);
+            let info;
+            
+            while ((info = enumerator.next_file(null))) {
+                files.push(info.get_name());
+            }
+            
+            // Sort files alphabetically
+            files.sort();
+        } catch (e) {
+            log('Error reading history files: ' + e.message);
         }
         
-        _openHistoryFile(filename) {
-            try {
-                let fullPath = GLib.build_filenamev([HISTORIES_DIR, filename]);
-                
-                // Execute the gt.sh script with the filename as an argument
-                let [success, pid] = GLib.spawn_async(
-                    null,                                   // Working directory (null = current)
-                    [GT_SCRIPT, fullPath],                  // Command and arguments
-                    null,                                   // Environment variables (null = current)
-                    GLib.SpawnFlags.SEARCH_PATH,           // Flags
-                    null                                    // Child setup function
-                );
-                
-                if (!success) {
-                    logError(new Error(), `Failed to execute ${GT_SCRIPT} with ${filename}`);
-                }
-            } catch (e) {
-                logError(e, `Error opening history file: ${filename}`);
+        return files;
+    }
+        
+    _openHistoryFile(filename) {
+        try {
+            let fullPath = GLib.build_filenamev([HISTORIES_DIR, filename]);
+            
+            // Execute the gt.sh script with the filename as an argument
+            let [success, pid] = GLib.spawn_async(
+                null,                               // Working directory (null = current)
+                [GT_SCRIPT, fullPath],              // Command and arguments
+                null,                               // Environment variables (null = current)
+                GLib.SpawnFlags.SEARCH_PATH,        // Flags
+                null                                // Child setup function
+            );
+            
+            if (!success) {
+                log(`Failed to execute ${GT_SCRIPT} with ${filename}`);
             }
-        }
-    }
-);
-
-class Extension {
-    constructor(uuid) {
-        this._uuid = uuid;
-    }
-    
-    enable() {
-        this._indicator = new HistoryFilesIndicator();
-        Main.panel.addToStatusArea(this._uuid, this._indicator);
-    }
-    
-    disable() {
-        if (this._indicator) {
-            this._indicator.destroy();
-            this._indicator = null;
+        } catch (e) {
+            log(`Error opening history file: ${filename} - ${e.message}`);
         }
     }
 }
 
+// Extension variables
+let button;
+
+// Initialize the extension
 function init() {
-    return new Extension(Me.metadata.uuid);
+    log('Initializing History Files Menu extension');
 }
 
-/* Export objects for GNOME Shell versions that use modules */
-if (typeof module !== 'undefined') {
-    module.exports = {
-        init,
-        Extension
-    };
+// Enable the extension
+function enable() {
+    log('Enabling History Files Menu extension');
+    button = new HistoryButton();
+    Main.panel.addToStatusArea('history-files-menu', button);
+}
+
+// Disable the extension
+function disable() {
+    log('Disabling History Files Menu extension');
+    if (button) {
+        button.destroy();
+        button = null;
+    }
 }
