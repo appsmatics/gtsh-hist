@@ -3,5 +3,6 @@
 }
 
 .history-files-menu-button .system-status-icon {
-    icon-size: 16px;
+    /* Use standard CSS property instead of icon-size */
+    -gtk-icon-size: 16px;
 }
