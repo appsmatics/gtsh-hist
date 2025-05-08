@@ -1,8 +1,14 @@
 {
-  "name": "Gnome Terminal w History File",
-  "description": "Shows a list of history files from $HOME/.histories folder in a popup menu panel",
-  "uuid": "gtsh-hist@appsmatics.com",
-  "shell-version": ["40", "41", "42", "43", "44", "45", "46"],
-  "url": "https://github.com/appsmatics/gtsh-hist",
-  "version": 1
+    "name": "Gnome Terminal with its own history file",
+    "description": "Launch GNOME Terminal with a separate history file in ~/.histories",
+    "uuid": "gtsh-hist@appsmatics.com",
+    "version": 1,
+    "shell-version": [
+      "45",
+      "46",
+      "47",
+      "48"
+    ],    
+    "url": "https://appsmatics.com",
+    "settings-schema": ""
 }

@@ -45,3 +45,13 @@
     delete the prefs.js and the use the imports in the style of 
     import Gio from 'gi://Gio';
 
+##### Give up and use another example
+    Now replace with another working example from extensive googling
+    StackOverflow and gjs documentation
+    
+    https://stackoverflow.com/questions/73067705/how-to-list-files-from-directory-with-wildcard-in-a-gnome-shell-extension
+
+    https://github.com/microsoft/vscode-extension-samples
+
+    https://gjs.guide/    
+    
