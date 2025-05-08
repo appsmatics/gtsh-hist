@@ -1,0 +1,2 @@
+##### Prompt-1
+    write a gnome-shell extension that can shows a list of files on a pop up menu panel.  Call the extension gtsh-hist@appsmatics.com. The list of items are history files from $HOME/.histories folder.  On selecting a particular item from the list  invoke a shell script gt.sh  with that filename as an argument. Generate the code for gnome shell versions 40 to 46

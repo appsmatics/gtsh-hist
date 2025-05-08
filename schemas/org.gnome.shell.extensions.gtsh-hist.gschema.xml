@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.gtsh-hist" path="/org/gnome/shell/extensions/gtsh-hist/">
+    <key name="refresh-interval" type="i">
+      <default>60</default>
+      <summary>Refresh interval</summary>
+      <description>How often to refresh the history files list (in seconds)</description>
+    </key>
+  </schema>
+</schemalist>
