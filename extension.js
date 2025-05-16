@@ -90,9 +90,15 @@ const ListIndicator = GObject.registerClass(
 
     }
 
+    _getUserHomeDir() {
+      const homeDir = Gio.File.new_for_path(GLib.getenv("HOME"));
+      return homeDir.get_path();
+    }
+
     async _getHistoryFiles() {
       try {
-        const directory = Gio.File.new_for_path('/home/mani/.histories');
+        let userHome = _getUserHomeDir();
+        const directory = Gio.File.new_for_path(`${userHome}/.histories`);
         //log('GTSH:', `got directory ${file}`);
 
         const fileInfo = await directory.query_info_async('standard::type',
@@ -194,7 +200,7 @@ const ListIndicator = GObject.registerClass(
     _launchTerminal(histFileName) {
       try {
         // Command to execute
-        let command = `/opt3/bin/gt.sh ${histFileName}`;
+        let command = `./gt.sh ${histFileName}`;
     
         // runs the command without blocking the shell
         GLib.spawn_command_line_async(command);
